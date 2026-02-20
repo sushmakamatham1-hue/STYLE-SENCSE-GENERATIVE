@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Fashion Recommendation</title>
+    <style>
+        body{
+            font-family: Arial;
+            background:#f4f6f9;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            height:100vh;
+        }
+        .card{
+            background:#fff;
+            padding:30px;
+            border-radius:10px;
+            width:350px;
+            box-shadow:0 0 15px rgba(0,0,0,0.1);
+        }
+        h2{text-align:center;}
+        select,input,button{
+            width:100%;
+            padding:10px;
+            margin-top:10px;
+        }
+        button{
+            background:#000;
+            color:#fff;
+            border:none;
+            cursor:pointer;
+        }
+        #result{
+            margin-top:15px;
+            padding:10px;
+            background:#e8f0ff;
+            border-radius:6px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>AI Fashion Recommender</h2>
+
+    <select id="style">
+        <option value="casual">Casual</option>
+        <option value="formal">Formal</option>
+        <option value="party">Party</option>
+        <option value="traditional">Traditional</option>
+    </select>
+
+    <input type="text" id="color" placeholder="Preferred Color">
+    <input type="text" id="occasion" placeholder="Occasion">
+
+    <button onclick="getRecommendation()">Get Recommendation</button>
+
+    <div id="result"></div>
+</div>
+
+<script>
+function getRecommendation(){
+    const style = document.getElementById('style').value;
+    const color = document.getElementById('color').value;
+    const occasion = document.getElementById('occasion').value;
+
+    fetch('/recommend',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({style:style,color:color,occasion:occasion})
+    })
+    .then(res=>res.json())
+    .then(data=>{
+        const el = document.getElementById('result');
+        // If model returned structured recommendations
+        if (data.recommendations && Array.isArray(data.recommendations)){
+            let html = '<b>Recommendations:</b><br>';
+            data.recommendations.forEach((r, idx)=>{
+                html += `<div style="margin-top:8px;"><b>#${idx+1}:</b> ${r.outfit} <br><b>Color:</b> ${r.color} <br><b>Why:</b> ${r.explanation}</div>`;
+            });
+            if (data.top_tip) html += `<div style="margin-top:10px;"><b>Top Tip:</b> ${data.top_tip}</div>`;
+            el.innerHTML = html;
+        } else {
+            // fall back to legacy fields
+            el.innerHTML = `
+                <b>Outfit:</b> ${data.recommended_outfit || ''}<br>
+                <b>Color:</b> ${data.color_preference || ''}<br>
+                <b>Occasion:</b> ${data.occasion || ''}<br>
+                <b>Tip:</b> ${data.styling_tip || ''}
+            `;
+        }
+    });
+}
+</script>
+
+
+</body>
+</html>
